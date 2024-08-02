@@ -20,12 +20,12 @@ Function Invoke-ListMailboxes {
     # Interact with query parameters or the body of the request.
     $TenantFilter = $Request.Query.TenantFilter
     try {
-        $Select = 'id,ExchangeGuid,ArchiveGuid,UserPrincipalName,DisplayName,PrimarySMTPAddress,RecipientType,RecipientTypeDetails,EmailAddresses,WhenSoftDeleted'
+        $Select = 'id,ExchangeGuid,ArchiveGuid,UserPrincipalName,DisplayName,PrimarySMTPAddress,RecipientType,RecipientTypeDetails,EmailAddresses,WhenSoftDeleted,IsInactiveMailbox,ForwardingSmtpAddress,DeliverToMailboxAndForward,ForwardingAddress'
         $ExoRequest = @{
             tenantid  = $TenantFilter
             cmdlet    = 'Get-Mailbox'
-            cmdParams = @{resultsize = 'unlimited' }
-            Select    = $select
+            cmdParams = @{}
+            Select    = $Select
         }
 
         $AllowedParameters = @(
@@ -63,7 +63,10 @@ Function Invoke-ListMailboxes {
         @{ Name = 'primarySmtpAddress'; Expression = { $_.'PrimarySMTPAddress' } },
         @{ Name = 'recipientType'; Expression = { $_.'RecipientType' } },
         @{ Name = 'recipientTypeDetails'; Expression = { $_.'RecipientTypeDetails' } },
-        @{ Name = 'AdditionalEmailAddresses'; Expression = { ($_.'EmailAddresses' | Where-Object { $_ -clike 'smtp:*' }).Replace('smtp:', '') -join ', ' } }
+        @{ Name = 'AdditionalEmailAddresses'; Expression = { ($_.'EmailAddresses' | Where-Object { $_ -clike 'smtp:*' }).Replace('smtp:', '') -join ', ' } },
+        @{Name = 'ForwardingSmtpAddress'; Expression = { $_.'ForwardingSmtpAddress' -replace 'smtp:', '' } },
+        @{Name = 'InternalForwardingAddress'; Expression = { $_.'ForwardingAddress' } },
+        DeliverToMailboxAndForward
         $StatusCode = [HttpStatusCode]::OK
     } catch {
         $ErrorMessage = Get-NormalizedError -Message $_.Exception.Message

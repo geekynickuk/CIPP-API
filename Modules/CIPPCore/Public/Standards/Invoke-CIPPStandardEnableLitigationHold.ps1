@@ -1,11 +1,34 @@
 function Invoke-CIPPStandardEnableLitigationHold {
     <#
     .FUNCTIONALITY
-    Internal
+        Internal
+    .COMPONENT
+        (APIName) EnableLitigationHold
+    .SYNOPSIS
+        (Label) Enable Litigation Hold for all users
+    .DESCRIPTION
+        (Helptext) Enables litigation hold for all UserMailboxes with a valid license.
+        (DocsDescription) Enables litigation hold for all UserMailboxes with a valid license.
+    .NOTES
+        CAT
+            Exchange Standards
+        TAG
+            "lowimpact"
+        ADDEDCOMPONENT
+        IMPACT
+            Low Impact
+        POWERSHELLEQUIVALENT
+            Set-Mailbox -LitigationHoldEnabled \$true
+        RECOMMENDEDBY
+        UPDATECOMMENTBLOCK
+            Run the Tools\Update-StandardsComments.ps1 script to update this comment block
+    .LINK
+        https://docs.cipp.app/user-documentation/tenant/standards/edit-standards
     #>
+
     param($Tenant, $Settings)
     
-    $MailboxesNoLitHold = New-ExoRequest -tenantid $Tenant -cmdlet 'Get-Mailbox' -cmdparams @{ MailboxPlan = 'ExchangeOnlineEnterprise'; Filter = 'LitigationHoldEnabled -eq "False"'}
+    $MailboxesNoLitHold = New-ExoRequest -tenantid $Tenant -cmdlet 'Get-Mailbox' -cmdparams @{ Filter = 'LitigationHoldEnabled -eq "False"'} | Where-Object {$_.PersistedCapabilities -contains "BPOS_S_DlpAddOn" -or $_.PersistedCapabilities -contains "BPOS_S_Enterprise"}
     
     If ($Settings.remediate -eq $true) {
 
